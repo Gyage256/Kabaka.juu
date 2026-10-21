@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1220">
+<title>FlashDrop</title>
+<style>
+:root{--bg:#0b1220;--panel:#121a2b;--panel2:#18223a;--line:#243050;--fg:#e8edf7;--mut:#8b98b8;--acc:#4f8cff;--acc2:#22d3a6;--bad:#ff5d6c;--r:12px}
+@media(prefers-color-scheme:light){:root{--bg:#f4f6fb;--panel:#fff;--panel2:#eef2fa;--line:#dbe2f0;--fg:#0f1830;--mut:#5b6785}}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--fg);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+button{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer}
+button:hover{border-color:var(--acc)}button.pri{background:var(--acc);border-color:var(--acc);color:#fff}button.bad{color:var(--bad)}
+input[type=text],input[type=search]{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;width:100%}
+header{display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--panel);border-bottom:1px solid var(--line)}
+header h1{font-size:17px;margin:0;display:flex;gap:6px;align-items:center;white-space:nowrap}
+header h1 b{color:var(--acc2)}
+.main{flex:1;display:flex;min-height:0}
+aside{width:220px;background:var(--panel);border-right:1px solid var(--line);padding:10px;overflow:auto;flex-shrink:0}
+aside h4{margin:14px 6px 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+aside a{display:block;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--fg)}aside a:hover,aside a.on{background:var(--panel2)}
+.disk{margin:8px 6px;font-size:12px;color:var(--mut)}.bar{height:6px;background:var(--panel2);border-radius:9px;overflow:hidden;margin-top:4px}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+section{flex:1;display:flex;flex-direction:column;min-width:0}
+.tools{display:flex;gap:6px;padding:8px 12px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--line)}
+.crumbs{display:flex;gap:2px;padding:8px 12px;overflow-x:auto;white-space:nowrap;color:var(--mut);font-size:13px}.crumbs a{cursor:pointer;padding:2px 6px;border-radius:6px}.crumbs a:hover{background:var(--panel2);color:var(--fg)}
+#list{flex:1;overflow:auto;padding:6px 8px 90px}
+.row{display:grid;grid-template-columns:28px 34px 1fr auto auto;gap:10px;align-items:center;padding:8px;border-radius:10px;cursor:pointer}
+.row:hover{background:var(--panel)}.row.sel{background:color-mix(in srgb,var(--acc) 22%,transparent)}
+.ico{font-size:22px;text-align:center}.nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.meta{color:var(--mut);font-size:12px;white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;padding:6px 4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:8px;cursor:pointer;text-align:center;position:relative}
+.card.sel{outline:2px solid var(--acc)}.card .th{height:90px;display:flex;align-items:center;justify-content:center;font-size:38px;overflow:hidden;border-radius:8px;background:var(--panel2)}.card .th img{width:100%;height:100%;object-fit:cover}
+.card .nm{margin-top:6px;font-size:13px}
+.chk{width:18px;height:18px;accent-color:var(--acc)}
+#drop{position:fixed;inset:0;background:#4f8cffcc;display:none;align-items:center;justify-content:center;font-size:28px;color:#fff;z-index:50}
+#xfer{position:fixed;right:12px;bottom:12px;width:min(380px,calc(100vw - 24px));background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 40px #0007;z-index:40;display:none;max-height:50vh;overflow:auto}
+#xfer .h{padding:10px 12px;display:flex;justify-content:space-between;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--panel)}
+.t{padding:8px 12px;font-size:13px}.t .p{height:5px;background:var(--panel2);border-radius:9px;margin-top:5px;overflow:hidden}.t .p i{display:block;height:100%;width:0;background:var(--acc2)}
+.modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:60;padding:12px}
+.modal>div{background:var(--panel);border:1px solid var(--line);border-radius:16px;max-width:min(900px,100%);max-height:92vh;overflow:auto;padding:16px;width:100%}
+.modal img,.modal video{max-width:100%;max-height:70vh;display:block;margin:auto;border-radius:10px}
+pre{white-space:pre-wrap;word-break:break-word;background:var(--panel2);padding:10px;border-radius:10px;max-height:65vh;overflow:auto}
+.bulk{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;background:var(--panel);border:1px solid var(--acc);border-radius:14px;padding:8px;display:none;gap:6px;z-index:30;box-shadow:0 10px 40px #0008;flex-wrap:wrap;max-width:calc(100vw - 16px);justify-content:center}
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;background:var(--panel2);font-size:12px;color:var(--mut)}
+.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}.tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+@media(max-width:760px){aside{position:fixed;inset:0 auto 0 0;z-index:35;transform:translateX(-100%);transition:.2s;box-shadow:10px 0 40px #0008}aside.open{transform:none}.row{grid-template-columns:28px 30px 1fr auto}.row .mt{display:none}.hide-m{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <button id="menu" class="hide-d" onclick="side.classList.toggle('open')" style="display:none">☰</button>
+  <h1>⚡ Flash<b>Drop</b></h1>
+  <input type="search" id="q" placeholder="Search files (Enter)…">
+  <button class="pri" onclick="pick()">⬆ Send</button>
+  <input type="file" id="fi" multiple hidden>
+</header>
+<div class="main">
+<aside id="side">
+  <h4>Places</h4><div id="places"></div>
+  <h4>Tools</h4>
+  <a onclick="tool('dupes')">🧬 Duplicate finder</a>
+  <a onclick="tool('usage')">📊 Storage analyzer</a>
+  <a onclick="tool('clip')">📋 Shared clipboard</a>
+  <a onclick="tool('connect')">📱 Connect device (QR)</a>
+  <a onclick="tool('speed')">🚀 Speed test</a>
+  <a onclick="load('.flashdrop_trash')">🗑 Trash</a>
+  <div class="disk" id="disk"></div>
+</aside>
+<section>
+  <div class="tools">
+    <button onclick="mkdir()">＋ Folder</button>
+    <button onclick="toggleView()" id="vbtn">▦ Grid</button>
+    <select id="sort" onchange="render()"><option value="name">Name</option><option value="mtime">Newest</option><option value="size">Largest</option><option value="kind">Type</option></select>
+    <label class="pill"><input type="checkbox" id="hid" onchange="load(cur)"> hidden</label>
+    <label class="pill hide-m"><input type="checkbox" id="all" onchange="selAll(this.checked)"> select all</label>
+    <span class="pill" id="count"></span>
+  </div>
+  <div class="crumbs" id="crumbs"></div>
+  <div id="list"></div>
+</section>
+</div>
+<div id="drop">Drop files to send here</div>
+<div id="xfer"><div class="h"><b id="xt">Transfers</b><a onclick="xfer.style.display='none'" style="cursor:pointer">✕</a></div><div id="tl"></div></div>
+<div class="bulk" id="bulk"></div>
+<div class="modal" id="modal" onclick="if(event.target===this)closeM()"><div id="mbody"></div></div>
+
+<script>
+const $=s=>document.querySelector(s);const side=$('#side'),listEl=$('#list');
+let cur='',items=[],sel=new Set(),grid=localStorage.fdgrid==='1',INFO={};
+const ICON={folder:'📁',image:'🖼️',video:'🎬',audio:'🎵',doc:'📄',archive:'🗜️',app:'📦',code:'🧾',file:'📃'};
+const fmt=b=>{if(b<1024)return b+' B';const u=['KB','MB','GB','TB'];let i=-1;do{b/=1024;i++}while(b>=1024&&i<3);return b.toFixed(b<10?1:0)+' '+u[i]};
+const when=t=>new Date(t*1000).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'2-digit'});
+const api=(p,o)=>fetch('/api/'+p,o).then(r=>{if(!r.ok)throw new Error(r.status);return r});
+const enc=encodeURIComponent;
+const post=(op,d)=>api('op',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op,...d})});
+if(matchMedia('(max-width:760px)').matches)$('#menu').style.display='';
+
+async function init(){
+  INFO=await (await api('info')).json();
+  $('#disk').innerHTML=`Disk ${fmt(INFO.disk.used)} / ${fmt(INFO.disk.total)}<div class=bar><i style="width:${INFO.disk.used/INFO.disk.total*100}%"></i></div>`;
+  $('#places').innerHTML=`<a onclick="load('')">🏠 Home</a>`+INFO.shortcuts.map(s=>`<a onclick="load('${s}')">${s==='FlashDrop'?'⚡ FlashDrop (inbox)':'📂 '+s}</a>`).join('');
+  load(location.hash?decodeURIComponent(location.hash.slice(1)):'');
+}
+async function load(p,q){
+  side.classList.remove('open');cur=p;sel.clear();bulk();
+  const r=q?await (await api('search?q='+enc(q)+'&path='+enc(p))).json():await (await api('ls?path='+enc(p)+'&hidden='+($('#hid').checked?1:0))).json();
+  items=r.items;if(!q)location.hash=enc(p);crumbs(q);render();
+}
+function crumbs(q){
+  const parts=cur?cur.split('/'):[];let acc='';
+  $('#crumbs').innerHTML=`<a onclick="load('')">Home</a>`+parts.map(x=>{acc+=(acc?'/':'')+x;const a=acc;return` › <a onclick="load('${a.replace(/'/g,"\\'")}')">${x}</a>`}).join('')+(q?` › <span class=pill>search “${q}”</span>`:'');
+}
+function render(){
+  const k=$('#sort').value;
+  const s=[...items].sort((a,b)=>(b.dir-a.dir)||(k==='mtime'?b.mtime-a.mtime:k==='size'?b.size-a.size:k==='kind'?a.kind.localeCompare(b.kind):a.name.localeCompare(b.name,undefined,{numeric:true})));
+  $('#count').textContent=s.length+' items';
+  const e=x=>x.path.replace(/'/g,"\\'");
+  listEl.className=grid?'grid':'';
+  listEl.innerHTML=s.map(x=>{
+    const on=sel.has(x.path)?' sel':'';
+    const th=x.kind==='image'?`<img loading=lazy src="/api/file?path=${enc(x.path)}&inline=1">`:ICON[x.kind];
+    return grid?`<div class="card${on}" onclick="act(event,'${e(x)}')" oncontextmenu="return ctx(event,'${e(x)}')"><input type=checkbox class=chk style="position:absolute;left:8px;top:8px" ${on?'checked':''} onclick="event.stopPropagation();tg('${e(x)}')"><div class=th>${th}</div><div class=nm>${x.name}</div><div class=meta>${x.dir?'':fmt(x.size)}</div></div>`
+    :`<div class="row${on}" onclick="act(event,'${e(x)}')" oncontextmenu="return ctx(event,'${e(x)}')"><input type=checkbox class=chk ${on?'checked':''} onclick="event.stopPropagation();tg('${e(x)}')"><div class=ico>${x.kind==='image'?`<img loading=lazy style="width:30px;height:30px;object-fit:cover;border-radius:6px" src="/api/file?path=${enc(x.path)}&inline=1">`:ICON[x.kind]}</div><div class=nm>${x.name}</div><div class=meta>${x.dir?'':fmt(x.size)}</div><div class="meta mt">${when(x.mtime)}</div></div>`}).join('')||'<p style="padding:30px;text-align:center;color:var(--mut)">Empty. Drop files here or tap ⬆ Send.</p>';
+}
+function toggleView(){grid=!grid;localStorage.fdgrid=grid?1:0;$('#vbtn').textContent=grid?'☰ List':'▦ Grid';render()}
+const byPath=p=>items.find(i=>i.path===p);
+function tg(p){sel.has(p)?sel.delete(p):sel.add(p);render();bulk()}
+function selAll(v){sel=new Set(v?items.map(i=>i.path):[]);render();bulk()}
+function act(ev,p){const x=byPath(p);if(sel.size||ev.ctrlKey||ev.metaKey){tg(p);return}
+  if(x.dir)load(x.path);else preview(x)}
+function ctx(ev,p){ev.preventDefault();tg(p);return false}
+function bulk(){const b=$('#bulk');if(!sel.size){b.style.display='none';return}
+  b.style.display='flex';b.innerHTML=`<span class=pill>${sel.size} selected</span><button onclick="dl()">⬇ Download</button><button onclick="mv('move')">➜ Move</button><button onclick="mv('copy')">⧉ Copy</button>${sel.size===1?'<button onclick="ren()">✎ Rename</button>':'<button onclick="bren()">✎ Bulk rename</button>'}<button class=bad onclick="del()">🗑 Delete</button><button onclick="selAll(false)">✕</button>`}
+function dl(){const ps=[...sel];const one=ps.length===1&&!byPath(ps[0]).dir;
+  const a=document.createElement('a');a.href=one?'/api/file?path='+enc(ps[0]):'/api/zip?'+ps.map(p=>'path='+enc(p)).join('&');a.click()}
+async function del(){if(!confirm(`Move ${sel.size} item(s) to trash?`))return;await post('delete',{paths:[...sel],permanent:cur==='.flashdrop_trash'});load(cur)}
+async function ren(){const p=[...sel][0];const n=prompt('New name',byPath(p).name);if(n){try{await post('rename',{path:p,name:n})}catch{alert('Name exists')}load(cur)}}
+async function bren(){const pat=prompt('Pattern (use {n} for number)','Photo_{n}');if(pat){await post('bulkrename',{paths:[...sel],pattern:pat,start:1});load(cur)}}
+async function mkdir(){const n=prompt('Folder name');if(n){await post('mkdir',{path:(cur?cur+'/':'')+n});load(cur)}}
+async function mv(op){const d=prompt((op==='move'?'Move':'Copy')+' to folder (path relative to Home, e.g. Documents/Work):',cur);if(d!==null){await post(op,{paths:[...sel],dest:d});load(cur)}}
+$('#q').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=e.target.value.trim();v?load(cur,v):load(cur)}});
+
+/* ---------- previews ---------- */
+function openM(h){$('#mbody').innerHTML=h;$('#modal').style.display='flex'}
+function closeM(){$('#modal').style.display='none';$('#mbody').innerHTML=''}
+async function preview(x){
+  const u='/api/file?path='+enc(x.path),iu=u+'&inline=1';
+  const head=`<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:10px"><b style="overflow:hidden;text-overflow:ellipsis">${x.name}</b><span><a href="${u}"><button class=pri>⬇ Download</button></a> <button onclick="closeM()">✕</button></span></div>`;
+  if(x.kind==='image')openM(head+`<img src="${iu}">`);
+  else if(x.kind==='video')openM(head+`<video src="${iu}" controls autoplay playsinline></video>`);
+  else if(x.kind==='audio')openM(head+`<audio src="${iu}" controls autoplay style="width:100%"></audio>`);
+  else if(/\.pdf$/i.test(x.name))openM(head+`<iframe src="${iu}" style="width:100%;height:72vh;border:0;border-radius:10px"></iframe>`);
+  else if(['code','doc'].includes(x.kind)&&x.size<2e6&&!/\.(docx?|xlsx?|pptx?|odt)$/i.test(x.name)){const t=await (await api('text?path='+enc(x.path))).text();const d=document.createElement('pre');d.textContent=t;openM(head);$('#mbody').appendChild(d)}
+  else openM(head+`<p>${fmt(x.size)} · ${when(x.mtime)}</p><p class=meta>No preview for this type. Tap Download.</p>`);
+}
+
+/* ---------- FAST UPLOAD: parallel chunks over raw HTTP, no base64, no compression ---------- */
+const CH=8*1024*1024,PAR=4,FILEPAR=2;
+function pick(){$('#fi').click()}
+$('#fi').onchange=e=>{send([...e.target.files]);e.target.value=''};
+let dragN=0;
+addEventListener('dragenter',e=>{e.preventDefault();dragN++;$('#drop').style.display='flex'});
+addEventListener('dragleave',e=>{dragN--;if(dragN<=0)$('#drop').style.display='none'});
+addEventListener('dragover',e=>e.preventDefault());
+addEventListener('drop',e=>{e.preventDefault();dragN=0;$('#drop').style.display='none';send([...e.dataTransfer.files])});
+let queue=[],active=0;
+function send(files){if(!files.length)return;$('#xfer').style.display='block';
+  files.forEach(f=>{const id=Math.random().toString(36).slice(2)+Date.now().toString(36);const el=document.createElement('div');el.className='t';
+    el.innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px"><span class=nm style="max-width:55%">${f.name}</span><span class=meta>queued</span></div><div class=p><i></i></div>`;$('#tl').prepend(el);queue.push({f,id,el,dest:cur})});
+  pump()}
+function pump(){while(active<FILEPAR&&queue.length){active++;up(queue.shift()).finally(()=>{active--;pump();if(!active&&!queue.length){load(cur)}})}}
+async function up({f,id,el,dest}){
+  const meta=el.querySelector('.meta'),bar=el.querySelector('i');const total=f.size;
+  const offs=[];for(let o=0;o<Math.max(total,1);o+=CH)offs.push(o);
+  let sent=0,t0=performance.now();const prog=new Map();
+  const upd=()=>{const b=sent+[...prog.values()].reduce((a,c)=>a+c,0);const sp=b/((performance.now()-t0)/1000||1);bar.style.width=(total?b/total*100:100)+'%';meta.textContent=`${fmt(sp)}/s · ${(total?b/total*100:100).toFixed(0)}%`};
+  const chunk=(o)=>new Promise((res,rej)=>{let tries=0;const go=()=>{const x=new XMLHttpRequest();
+    x.open('POST',`/api/upload?path=${enc(dest)}&name=${enc(f.name)}&id=${id}&offset=${o}&total=${total}`);
+    x.upload.onprogress=e=>{prog.set(o,e.loaded);upd()};
+    x.onload=()=>{if(x.status===200){prog.delete(o);sent+=Math.min(CH,total-o);upd();res()}else retry()};x.onerror=retry;
+    const retry=()=>{prog.delete(o);if(++tries>5)rej(new Error('fail'));else setTimeout(go,500*tries)};
+    x.send(f.slice(o,Math.min(o+CH,total)))};go()});
+  try{
+    // chunk 0 first so the server creates the file, then the rest in parallel
+    await chunk(offs[0]);const rest=offs.slice(1);
+    await Promise.all(Array.from({length:Math.min(PAR,rest.length)},async()=>{while(rest.length)await chunk(rest.shift())}));
+    const s=(performance.now()-t0)/1000;meta.textContent=`✓ ${fmt(total/s)}/s avg`;meta.style.color='var(--acc2)';bar.style.width='100%';
+  }catch(e){meta.textContent='failed';meta.style.color='var(--bad)'}
+}
+
+/* ---------- tools ---------- */
+async function tool(n){side.classList.remove('open');
+  if(n==='connect'){openM(`<div style="display:flex;justify-content:space-between"><b>Connect another device</b><button onclick="closeM()">✕</button></div><p>Join the <b>same WiFi or hotspot</b> and scan. No internet or mobile data needed.</p><div style="text-align:center;background:#fff;border-radius:12px;padding:8px;width:fit-content;margin:auto">${INFO.qr||'(Open the FlashDrop app on the phone to see the QR code)'}</div><p style="text-align:center">${INFO.urls.map(u=>`<div><code>${u}</code></div>`).join('')}</p>`)}
+  if(n==='clip'){const r=await (await api('clip')).json();openM(`<div style="display:flex;justify-content:space-between"><b>Shared clipboard</b><button onclick="closeM()">✕</button></div><p class=meta>Text sent here shows on every connected device.</p><div style="display:flex;gap:6px"><input type=text id=ct placeholder="Paste text or link"><button class=pri onclick="clipSend()">Send</button></div>${r.items.slice().reverse().map(i=>`<pre style="margin:8px 0;max-height:120px">${i.text.replace(/</g,'&lt;')}</pre><button onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent)">Copy</button>`).join('')}`)}
+  if(n==='usage'){openM('<p>Analyzing…</p>');const r=await (await api('usage?path='+enc(cur))).json();const tot=Object.values(r.kinds).reduce((a,c)=>a+c,0)||1;
+    openM(`<div style="display:flex;justify-content:space-between"><b>Storage in this folder · ${fmt(tot)}</b><button onclick="closeM()">✕</button></div>${Object.entries(r.kinds).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div style="margin:8px 0">${ICON[k]||''} ${k} <span class=meta>${fmt(v)}</span><div class=bar><i style="width:${v/tot*100}%"></i></div></div>`).join('')}<h4>Largest files</h4>${r.largest.map(x=>`<div class=row style="grid-template-columns:1fr auto" onclick="closeM();load('${x.path.split('/').slice(0,-1).join('/')}')"><span class=nm>${x.path}</span><span class=meta>${fmt(x.size)}</span></div>`).join('')}`)}
+  if(n==='dupes'){openM('<p>Scanning for duplicates (size → quick hash → full hash)…</p>');const r=await (await api('dupes?path='+enc(cur))).json();
+    const waste=r.groups.reduce((a,g)=>a+g.size*(g.files.length-1),0);
+    openM(`<div style="display:flex;justify-content:space-between"><b>${r.groups.length} duplicate sets · ${fmt(waste)} reclaimable</b><button onclick="closeM()">✕</button></div>${r.groups.map(g=>`<div style="border:1px solid var(--line);border-radius:10px;padding:8px;margin:8px 0"><span class=pill>${fmt(g.size)} × ${g.files.length}</span>${g.files.map((f,i)=>`<div class=row style="grid-template-columns:1fr auto"><span class=nm>${f.path}</span>${i?`<button class=bad onclick="dupDel('${f.path.replace(/'/g,"\\'")}',this)">Delete</button>`:'<span class=pill>keep</span>'}</div>`).join('')}</div>`).join('')||'<p>No duplicates 🎉</p>'}`)}
+  if(n==='speed'){openM(`<div style="display:flex;justify-content:space-between"><b>Link speed test</b><button onclick="closeM()">✕</button></div><p class=meta>Measures the real WiFi speed between this device and the host.</p><pre id=sp>Testing download…</pre>`);
+    let t=performance.now();const r=await fetch('/api/speedtest?mb=100');const b=await r.arrayBuffer();const d=b.byteLength/((performance.now()-t)/1000);
+    $('#sp').textContent=`Download: ${(d*8/1e6).toFixed(0)} Mbit/s (${fmt(d)}/s)\nTesting upload…`;
+    const blob=new Blob([new Uint8Array(50*1024*1024)]);t=performance.now();await fetch('/api/speedtest',{method:'POST',body:blob});const u=blob.size/((performance.now()-t)/1000);
+    $('#sp').textContent+=`\nUpload:   ${(u*8/1e6).toFixed(0)} Mbit/s (${fmt(u)}/s)\n\nTip: 5 GHz WiFi / hotspot on 5 GHz is 3-5x faster than 2.4 GHz.`}
+}
+async function clipSend(){const v=$('#ct').value;if(v){await api('clip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:v})});tool('clip')}}
+async function dupDel(p,b){await post('delete',{paths:[p]});b.closest('.row').style.opacity=.3;b.remove()}
+init();
+</script>
+</body>
+</html>
