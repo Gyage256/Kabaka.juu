@@ -179,8 +179,8 @@ async function up({f,id,el,dest}){
   const chunk=(o)=>new Promise((res,rej)=>{let tries=0;const go=()=>{const x=new XMLHttpRequest();
     x.open('POST',`/api/upload?path=${enc(dest)}&name=${enc(f.name)}&id=${id}&offset=${o}&total=${total}`);
     x.upload.onprogress=e=>{prog.set(o,e.loaded);upd()};
-    x.onload=()=>{if(x.status===200){prog.delete(o);sent+=Math.min(CH,total-o);upd();res()}else retry()};x.onerror=retry;
     const retry=()=>{prog.delete(o);if(++tries>5)rej(new Error('fail'));else setTimeout(go,500*tries)};
+    x.onload=()=>{if(x.status===200){prog.delete(o);sent+=Math.min(CH,total-o);upd();res()}else retry()};x.onerror=retry;
     x.send(f.slice(o,Math.min(o+CH,total)))};go()});
   try{
     // chunk 0 first so the server creates the file, then the rest in parallel
